@@ -1,0 +1,4 @@
+This is an Eclipse project for bruteforcing the hash provided by XKCD at almamater.xkcd.com.
+It's pretty gross, because instead of calculating the hash itself, it POSTs to almamater.xkcd.com and parses the distance between the hashes out of the response.
+It is multithreaded and stuff.
+Good luck.
