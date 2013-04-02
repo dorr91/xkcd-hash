@@ -1,3 +1,5 @@
+package xkcd.hash;
+
 import java.io.IOException;
 
 public class Main {
@@ -13,12 +15,12 @@ public class Main {
 
 		for(int i=0; i<maxThreads; i++) {
 			try {
-				Thread.sleep(2);
+				Thread.sleep(10);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			System.out.println("Starting thread " + i);
-			new Guesser(String.valueOf(System.currentTimeMillis())).start();
+			long seed = System.currentTimeMillis();
+			new Guesser(seed, i).start();
 		}
 	}
 }
