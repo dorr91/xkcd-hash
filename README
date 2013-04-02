@@ -1,4 +1,12 @@
-This is an Eclipse project for bruteforcing the hash provided by XKCD at almamater.xkcd.com.
-It's pretty gross, because instead of calculating the hash itself, it POSTs to almamater.xkcd.com and parses the distance between the hashes out of the response.
-It is multithreaded and stuff.
-Good luck.
+This is a Java project for bruteforcing the hash provided by XKCD (xkcd.com/1193) at almamater.xkcd.com.
+Run with 
+	java -jar xkcd-hash.jar <numthreads>
+This will print and submit to http://almamater.xkcd.com/?edu=cmu.edu every hash it finds that is a new 
+best, per thread (coordinating across threads seemed like a lot of overhead).
+On every million hash, it also prints the total hashes so far and the average hash speed since starting.
+
+Throughput:
+A single thread on a 3.84ghz AMD phenom II x6 processor checks ~21000 hashes/sec.
+Six threads on 6 cores saw throughput of ~17000 hashes/sec per thread.
+
+Unfortunately, this does not compare favorably with a similar C implementation, which achieves nearly a million hashes/sec, single-threaded. Oh well.
