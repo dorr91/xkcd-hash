@@ -1,3 +1,10 @@
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
 import org.apache.commons.codec.binary.Hex;
 import org.bouncycastle.crypto.digests.Skein;
 
@@ -20,6 +27,7 @@ public class Guesser extends Thread {
 	public Guesser(String initial) {
 		current = initial;
 		
+		//set up the byte[] for the target hash
 		for(int i=0; i<targetString.length(); i+=2) {
 			int b = Integer.parseInt(targetString.substring(i, i+2), 16);
 			target[i/2] = (byte)b;
@@ -34,11 +42,16 @@ public class Guesser extends Thread {
 			if(diff < best) {
 				best = diff;
 				System.out.println(diff + ": " + current);
+				try{
+					send(current);
+				} catch(IOException e) {
+					System.out.println("failed to send.");
+					e.printStackTrace();
+				}
 			}
 			
-			String next = Hex.encodeHexString(hashed) 
+			current = Hex.encodeHexString(hashed)
 					+ String.valueOf(System.currentTimeMillis()).toString();
-			current = next;
 		}
 	}
 	
@@ -51,5 +64,21 @@ public class Guesser extends Thread {
 			}
 		}
 		return count;
+	}
+	
+	private void send(String s) throws IOException {
+		URL url = new URL("http://almamater.xkcd.com/?edu=cmu.edu");
+		HttpURLConnection c = (HttpURLConnection) (url.openConnection());
+		c.setDoOutput(true);
+		c.setRequestMethod("POST");
+		
+		OutputStreamWriter writer = new OutputStreamWriter(c.getOutputStream());
+		writer.write("hashable=" + s);
+		writer.flush();
+		
+		BufferedReader reader = new BufferedReader(new InputStreamReader(c.getInputStream()));
+		
+		writer.close();
+		reader.close();
 	}
 }
