@@ -1,67 +1,55 @@
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-
+import org.apache.commons.codec.binary.Hex;
+import org.bouncycastle.crypto.digests.Skein;
 
 public class Guesser extends Thread {
 	static volatile int best = 1000;
-	String[] dict;
+	String current;
 	Integer threadcount;
 
-	String baseParams = "hashable=";
-	String params;
+	Skein skein = new Skein(1024, 1024);
+		
+	/* target hash */
+	String targetString = "5b4da95f5fa08280fc9879df44f418c8f9f12ba424b7757de02bbdf" +
+			"bae0d4c4fdf9317c80cc5fe04c6429073466cf29706b8c25999ddd2f6540d44" +
+			"75cc977b87f4757be023f19b8f4035d7722886b78869826de916a79cf9c94cc" +
+			"79cd4347d24b567aa3e2390a573a373a48a5e676640c79cc70197e1c5e7f902" +
+			"fb53ca1858b6";
 	
-	public Guesser(String[] dict, Integer threadcount) {
-		this.dict = dict;
-		this.threadcount = threadcount;
+	byte[] target = new byte[128];
+		
+	public Guesser(String initial) {
+		current = initial;
+		
+		for(int i=0; i<targetString.length(); i+=2) {
+			int b = Integer.parseInt(targetString.substring(i, i+2), 16);
+			target[i/2] = (byte)b;
+		}
 	}
 	
 	public void run() {
-		String bestWord = "";
-		
-		for(String word : dict) {
-			int score = guess(word);
-			if(score < best) {
-				best = score;
-				bestWord = word;
-				System.out.println("New best: " + word + " = " + score);
+		while(true) {
+			skein.updateBits(current.getBytes(), 0, current.getBytes().length * 8);
+			byte[] hashed = skein.doFinal();
+			int diff = compare(target, hashed);
+			if(diff < best) {
+				best = diff;
+				System.out.println(diff + ": " + current);
 			}
+			
+			String next = Hex.encodeHexString(hashed) 
+					+ String.valueOf(System.currentTimeMillis()).toString();
+			current = next;
 		}
-		threadcount--;
 	}
 	
-	public int guess(String s) {
-		try {
-			URL url = new URL("http://almamater.xkcd.com/?edu=cmu.edu");
-			params = baseParams + s;
-			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-			connection.setDoOutput(true);
-			connection.setRequestMethod("POST");
-
-			DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
-			wr.writeBytes(params);
-			wr.flush();
-			
-			
-			BufferedReader reader = new BufferedReader(
-					new InputStreamReader(
-							connection.getInputStream()));
-
-			reader.readLine();
-			String line = reader.readLine();
-			//I'm so sorry for hardcoding this.
-			int difference = Integer.parseInt(line.substring(303,306));
-		
-			wr.close();
-			reader.close();
-			
-			return difference;
-		} catch (IOException e) {
-			e.printStackTrace();
-			return 1000;
+	private int compare(byte[] b1, byte[] b2) {
+		int count = 0;
+		for (int i=0; i<b1.length; i++) {
+			byte diff = (byte)(b1[i] ^ b2[i]);
+			for(int j=0; j<8; j++) {
+				if((diff & (1 << j)) > 0) count ++;
+			}
 		}
+		return count;
 	}
 }
