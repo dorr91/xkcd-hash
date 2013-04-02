@@ -100,7 +100,7 @@ public class Guesser extends Thread {
 	}
 	
 	private void send(byte[] b) throws IOException {
-		URL url = new URL("http://almamater.xkcd.com/?edu=davidrorr.com");
+		URL url = new URL("http://almamater.xkcd.com/?edu=cmu.edu");
 		HttpURLConnection c = (HttpURLConnection) (url.openConnection());
 		c.setDoOutput(true);
 		c.setRequestMethod("POST");
